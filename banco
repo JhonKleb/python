@@ -1,0 +1,48 @@
+CREATE DATABASE IF NOT EXISTS sipat;
+USE sipat;
+
+CREATE TABLE Aluno (
+    Matricula_Al INT PRIMARY KEY,
+    Nome VARCHAR(100),
+    Email VARCHAR(100),
+    Turma VARCHAR(50)
+);
+
+CREATE TABLE Servidor (
+    Matricula_Serv INT PRIMARY KEY,
+    Nome VARCHAR(100),
+    Email VARCHAR(100)
+);
+
+CREATE TABLE Login (
+    Matricula_Al INT,
+    Matricula_Serv INT,
+    Senha VARCHAR(100),
+    PRIMARY KEY (Matricula_Al, Matricula_Serv),
+    FOREIGN KEY (Matricula_Al) REFERENCES Aluno(Matricula_Al) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Matricula_Serv) REFERENCES Servidor(Matricula_Serv) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE BD_Aluno (
+    Tombo INT PRIMARY KEY,
+    Matricula_Al INT,
+    Situacao VARCHAR(50),
+    `Data` DATE,
+    `Local` VARCHAR(100),
+    FOREIGN KEY (Matricula_Al) REFERENCES Aluno(Matricula_Al) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE BD_Servidor (
+    Tombo INT PRIMARY KEY,
+    Matricula_Serv INT,
+    Situacao VARCHAR(50),
+    `Data` DATE,
+    `Local` VARCHAR(100),
+    FOREIGN KEY (Matricula_Serv) REFERENCES Servidor(Matricula_Serv) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+INSERT INTO Servidor (Matricula_Serv, Nome, Email) 
+VALUES (242543, 'ServidorEx', 'servex@gmail.com');
+
+INSERT INTO BD_Servidor (Tombo, Matricula_Serv, Situacao, `Data`, `Local`) 
+VALUES (4569, 242543, 'Em funcionamento', '2025-08-31', 'Laboratório 01');
