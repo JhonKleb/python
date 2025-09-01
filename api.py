@@ -10,30 +10,42 @@ import secrets, string
 app = Flask(__name__)
 api = Api(app)
 CORS(app)
-
-mysql = MySQL(app)
-
 # Configuração do MySQL
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = '12345678'
-app.config['MYSQL_DB'] = 'sipat'
+DB_HOST = 'localhost'
+DB_NAME = 'sipat'
+DB_USER = 'postgres'
+DB_PASS = 'root'
+DB_PORT = 5432
+
+def get_db_connection():
+    conn = psycopg2.connect(
+        host=DB_HOST,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASS,
+        port=DB_PORT
+    )
+    return conn
+
 
 class Patrimonio(Resource):
     def get(self):
-        cur = mysql.connection.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor()
         cur.execute("SELECT Tombo, Matricula_Serv, Situacao, Data, Local FROM BD_Servidor")
         rows = cur.fetchall()
         cur.close() 
+        conn.close()
 
         pat_completo = [{'Tombo' : row[0], 'Matricula_Serv' : row[1], 'Situacao' : row[2], 'Data': row[3].strftime('%Y-%m-%d %H:%M:%S'), 'Local': row[4]} for row in rows]
         return jsonify({'Patrimônio completo': pat_completo})
     
 class FiltrarPatrimonio(Resource):
     def get(self, Tombo):
-        cur = mysql.connection.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor()
         cur.execute("SELECT Tombo, Nome,  Matricula_Serv, Situacao, Data, Local FROM BD_Servidor WHERE Tombo = %s", (Tombo,))
-        rows = cur.fetchall()
+        rows = conn.cursor()
         cur.close()
 
         if rows:
