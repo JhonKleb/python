@@ -1,48 +1,45 @@
-CREATE DATABASE IF NOT EXISTS sipat;
-USE sipat;
-
-CREATE TABLE Aluno (
-    Matricula_Al INT PRIMARY KEY,
-    Nome VARCHAR(100),
-    Email VARCHAR(100),
-    Turma VARCHAR(50)
+CREATE TABLE IF NOT EXISTS aluno (
+    matricula_al INT PRIMARY KEY,
+    nome VARCHAR(100),
+    email VARCHAR(100),
+    turma VARCHAR(50)
 );
 
-CREATE TABLE Servidor (
-    Matricula_Serv INT PRIMARY KEY,
-    Nome VARCHAR(100),
-    Email VARCHAR(100)
+CREATE TABLE IF NOT EXISTS servidor (
+    matricula_serv INT PRIMARY KEY,
+    nome VARCHAR(100),
+    email VARCHAR(100)
 );
 
-CREATE TABLE Login (
-    Matricula_Al INT,
-    Matricula_Serv INT,
-    Senha VARCHAR(100),
-    PRIMARY KEY (Matricula_Al, Matricula_Serv),
-    FOREIGN KEY (Matricula_Al) REFERENCES Aluno(Matricula_Al) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (Matricula_Serv) REFERENCES Servidor(Matricula_Serv) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE IF NOT EXISTS login (
+    matricula_al INT,
+    matricula_serv INT,
+    senha VARCHAR(100),
+    PRIMARY KEY (matricula_al, matricula_serv),
+    FOREIGN KEY (matricula_al) REFERENCES aluno(matricula_al) ON DELETE CASCADE,
+    FOREIGN KEY (matricula_serv) REFERENCES servidor(matricula_serv) ON DELETE CASCADE
 );
 
-CREATE TABLE BD_Aluno (
-    Tombo INT PRIMARY KEY,
-    Matricula_Al INT,
-    Situacao VARCHAR(50),
-    `Data` DATE,
-    `Local` VARCHAR(100),
-    FOREIGN KEY (Matricula_Al) REFERENCES Aluno(Matricula_Al) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE IF NOT EXISTS bd_aluno (
+    tombo INT PRIMARY KEY,
+    matricula_al INT,
+    situacao VARCHAR(50),
+    data DATE,
+    local VARCHAR(100),
+    FOREIGN KEY (matricula_al) REFERENCES aluno(matricula_al) ON DELETE CASCADE
 );
 
-CREATE TABLE BD_Servidor (
-    Tombo INT PRIMARY KEY,
-    Matricula_Serv INT,
-    Situacao VARCHAR(50),
-    `Data` DATE,
-    `Local` VARCHAR(100),
-    FOREIGN KEY (Matricula_Serv) REFERENCES Servidor(Matricula_Serv) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE IF NOT EXISTS bd_servidor (
+    tombo INT PRIMARY KEY,
+    matricula_serv INT,
+    situacao VARCHAR(50),
+    data DATE,
+    local VARCHAR(100),
+    FOREIGN KEY (matricula_serv) REFERENCES servidor(matricula_serv) ON DELETE CASCADE
 );
 
-INSERT INTO Servidor (Matricula_Serv, Nome, Email) 
+INSERT INTO servidor (matricula_serv, nome, email) 
 VALUES (242543, 'ServidorEx', 'servex@gmail.com');
 
-INSERT INTO BD_Servidor (Tombo, Matricula_Serv, Situacao, `Data`, `Local`) 
+INSERT INTO bd_servidor (tombo, matricula_serv, situacao, data, local) 
 VALUES (4569, 242543, 'Em funcionamento', '2025-08-31', 'Laboratório 01');
