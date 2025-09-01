@@ -23,22 +23,22 @@ def get_db_connection():
         database=DB_NAME,
         user=DB_USER,
         password=DB_PASS,
-        port=DB_PORT
+        port=DB_PORT,
+        cursor_factory=RealDictCursor
     )
     return conn
-
 
 class Patrimonio(Resource):
     def get(self):
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT Tombo, Matricula_Serv, Situacao, Data, Local FROM BD_Servidor")
+        cur.execute("SELECT * FROM bd_servidor;")
         rows = cur.fetchall()
-        cur.close() 
+        cur.close()
         conn.close()
 
-        pat_completo = [{'Tombo' : row[0], 'Matricula_Serv' : row[1], 'Situacao' : row[2], 'Data': row[3].strftime('%Y-%m-%d %H:%M:%S'), 'Local': row[4]} for row in rows]
-        return jsonify({'Patrimônio completo': pat_completo})
+        return jsonify({'Patrimonio completo': rows})
+
     
 class FiltrarPatrimonio(Resource):
     def get(self, Tombo):
