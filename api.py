@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
-from flask_mysqldb import MySQL
 from flask_cors import CORS
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from datetime import datetime
 import secrets, string
 
