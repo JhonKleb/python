@@ -25,7 +25,7 @@ class Patrimonio(Resource):
         rows = cur.fetchall()
         cur.close() 
 
-        pat_completo = [{'Tombo' : row[0], 'Nome' : row[1], 'Matricula_Serv' : row[2], 'Situacao' : row[3], 'Data': row[4].strftime('%Y-%m-%d %H:%M:%S'), 'Local': row[5]} for row in rows]
+        pat_completo = [{'Tombo' : row[0], 'Matricula_Serv' : row[1], 'Situacao' : row[2], 'Data': row[3].strftime('%Y-%m-%d %H:%M:%S'), 'Local': row[4]} for row in rows]
         return jsonify({'Patrimônio completo': pat_completo})
     
 class FiltrarPatrimonio(Resource):
@@ -61,12 +61,12 @@ class InserirObjeto(Resource):
         objeto.add_argument('Local', type=str, help="O campo 'Local é obrigatório")
 
         dados = objeto.parse_args()
-        codigo = self.gerar_codigo_ocorrencia()
+        codigo = self.codigo
 
         return jsonify({'message': 'Objeto adicionado!', 'dados': dados, 'codigo': codigo})
 
 api.add_resource(Patrimonio, '/patrimonio')
-api.add_resource(FiltrarPatrimonio, '/filtpatrimonio')
+api.add_resource(FiltrarPatrimonio, '/filtpatrimonio/<int:Tombo>')
 api.add_resource(InserirObjeto, '/insobj')
 
 if __name__ == '__main__':
