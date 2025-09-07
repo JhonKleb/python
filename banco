@@ -1,37 +1,43 @@
-CREATE TABLE IF NOT EXISTS aluno (
-    matricula_al INT PRIMARY KEY,
+DROP TABLE IF EXISTS denuncia CASCADE;
+DROP TABLE IF EXISTS patrimonio CASCADE;
+DROP TABLE IF EXISTS login CASCADE;
+DROP TABLE IF EXISTS aluno CASCADE;
+DROP TABLE IF EXISTS servidor CASCADE;
+
+CREATE TABLE aluno (
+    matricula_al BIGINT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE,
     turma VARCHAR(50)
 );
 
-CREATE TABLE IF NOT EXISTS servidor (
-    matricula_serv INT PRIMARY KEY,
+CREATE TABLE servidor (
+    matricula_serv BIGINT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE
 );
 
-CREATE TABLE IF NOT EXISTS login (
+CREATE TABLE login (
     id_login SERIAL PRIMARY KEY,
-    matricula_al INT NULL,
-    matricula_serv INT NULL,
+    matricula_al BIGINT NULL,
+    matricula_serv BIGINT NULL,
     senha VARCHAR(255) NOT NULL,
     CONSTRAINT fk_login_al FOREIGN KEY (matricula_al) REFERENCES aluno(matricula_al) ON DELETE CASCADE,
     CONSTRAINT fk_login_serv FOREIGN KEY (matricula_serv) REFERENCES servidor(matricula_serv) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS patrimonio (
-    tombo INT PRIMARY KEY,
+CREATE TABLE patrimonio (
+    tombo BIGINT PRIMARY KEY,
     descricao VARCHAR(255) NOT NULL,
     situacao VARCHAR(50) DEFAULT 'Em funcionamento',
     data_registro DATE DEFAULT CURRENT_DATE,
     local VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS denuncia (
+CREATE TABLE denuncia (
     id_denuncia SERIAL PRIMARY KEY,
-    tombo INT NOT NULL,
-    matricula_al INT NOT NULL,
+    tombo BIGINT NOT NULL,
+    matricula_al BIGINT NOT NULL,
     descricao TEXT NOT NULL,
     status VARCHAR(50) DEFAULT 'Aberta',
     data_denuncia TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -39,14 +45,14 @@ CREATE TABLE IF NOT EXISTS denuncia (
     CONSTRAINT fk_denuncia_al FOREIGN KEY (matricula_al) REFERENCES aluno(matricula_al) ON DELETE CASCADE
 );
 
-INSERT INTO servidor (matricula_serv, nome, email) 
+INSERT INTO servidor (matricula_serv, nome, email)
 VALUES (242543, 'ServidorEx', 'servex@gmail.com');
 
 INSERT INTO patrimonio (tombo, descricao, situacao, local) 
 VALUES (4569, 'Projetor Epson', 'Em funcionamento', 'Laboratório 01');
 
 INSERT INTO aluno (matricula_al, nome, email, turma) 
-VALUES (1001, 'AlunoEx', 'alunoex@gmail.com', 'Turma A');
+VALUES (2023120230020, 'Jhon Kleber Silva Costa', 'jhonklebersilvacosta0@gmail.com', 'INFO3A');
 
 INSERT INTO denuncia (tombo, matricula_al, descricao) 
-VALUES (4569, 1001, 'Projetor não está ligando');
+VALUES (4569, 2023120230020, 'Projetor não está ligando');
