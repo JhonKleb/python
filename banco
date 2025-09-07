@@ -1,45 +1,52 @@
 CREATE TABLE IF NOT EXISTS aluno (
     matricula_al INT PRIMARY KEY,
-    nome VARCHAR(100),
-    email VARCHAR(100),
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE,
     turma VARCHAR(50)
 );
 
 CREATE TABLE IF NOT EXISTS servidor (
     matricula_serv INT PRIMARY KEY,
-    nome VARCHAR(100),
-    email VARCHAR(100)
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS login (
-    matricula_al INT,
-    matricula_serv INT,
-    senha VARCHAR(100),
-    PRIMARY KEY (matricula_al, matricula_serv),
-    FOREIGN KEY (matricula_al) REFERENCES aluno(matricula_al) ON DELETE CASCADE,
-    FOREIGN KEY (matricula_serv) REFERENCES servidor(matricula_serv) ON DELETE CASCADE
+    id_login SERIAL PRIMARY KEY,
+    matricula_al INT NULL,
+    matricula_serv INT NULL,
+    senha VARCHAR(255) NOT NULL,
+    CONSTRAINT fk_login_al FOREIGN KEY (matricula_al) REFERENCES aluno(matricula_al) ON DELETE CASCADE,
+    CONSTRAINT fk_login_serv FOREIGN KEY (matricula_serv) REFERENCES servidor(matricula_serv) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS bd_aluno (
+CREATE TABLE IF NOT EXISTS patrimonio (
     tombo INT PRIMARY KEY,
-    matricula_al INT,
-    situacao VARCHAR(50),
-    data DATE,
-    local VARCHAR(100),
-    FOREIGN KEY (matricula_al) REFERENCES aluno(matricula_al) ON DELETE CASCADE
+    descricao VARCHAR(255) NOT NULL,
+    situacao VARCHAR(50) DEFAULT 'Em funcionamento',
+    data_registro DATE DEFAULT CURRENT_DATE,
+    local VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS bd_servidor (
-    tombo INT PRIMARY KEY,
-    matricula_serv INT,
-    situacao VARCHAR(50),
-    data DATE,
-    local VARCHAR(100),
-    FOREIGN KEY (matricula_serv) REFERENCES servidor(matricula_serv) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS denuncia (
+    id_denuncia SERIAL PRIMARY KEY,
+    tombo INT NOT NULL,
+    matricula_al INT NOT NULL,
+    descricao TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'Aberta',
+    data_denuncia TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_denuncia_patr FOREIGN KEY (tombo) REFERENCES patrimonio(tombo) ON DELETE CASCADE,
+    CONSTRAINT fk_denuncia_al FOREIGN KEY (matricula_al) REFERENCES aluno(matricula_al) ON DELETE CASCADE
 );
 
 INSERT INTO servidor (matricula_serv, nome, email) 
 VALUES (242543, 'ServidorEx', 'servex@gmail.com');
 
-INSERT INTO bd_servidor (tombo, matricula_serv, situacao, data, local) 
-VALUES (4569, 242543, 'Em funcionamento', '2025-08-31', 'Laboratório 01');
+INSERT INTO patrimonio (tombo, descricao, situacao, local) 
+VALUES (4569, 'Projetor Epson', 'Em funcionamento', 'Laboratório 01');
+
+INSERT INTO aluno (matricula_al, nome, email, turma) 
+VALUES (1001, 'AlunoEx', 'alunoex@gmail.com', 'Turma A');
+
+INSERT INTO denuncia (tombo, matricula_al, descricao) 
+VALUES (4569, 1001, 'Projetor não está ligando');
