@@ -31,7 +31,8 @@ CREATE TABLE patrimonio (
     descricao VARCHAR(255) NOT NULL,
     situacao VARCHAR(50) DEFAULT 'Em funcionamento',
     data_registro DATE DEFAULT CURRENT_DATE,
-    local VARCHAR(100) NOT NULL
+    local VARCHAR(100) NOT NULL,
+    codigo VARCHAR(20) UNIQUE NOT NULL
 );
 
 CREATE TABLE denuncia (
@@ -49,8 +50,8 @@ CREATE TABLE denuncia (
 INSERT INTO servidor (matricula_serv, nome, email)
 VALUES (242543, 'ServidorEx', 'servex@gmail.com');
 
-INSERT INTO patrimonio (tombo, descricao, situacao, local) 
-VALUES (4569, 'Projetor Epson', 'Em funcionamento', 'Laboratório 01');
+INSERT INTO patrimonio (tombo, descricao, situacao, local, codigo) 
+VALUES (4569, 'Projetor Epson', 'Em funcionamento', 'Laboratório 01', 'ABC12345');
 
 INSERT INTO aluno (matricula_al, nome, email, turma) 
 VALUES (2023120230020, 'Jhon Kleber Silva Costa', 'jhonklebersilvacosta0@gmail.com', 'INFO3A');
