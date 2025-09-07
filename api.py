@@ -32,7 +32,7 @@ class Patrimonio(Resource):
     def get(self):
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM bd_servidor;")
+        cur.execute("SELECT * FROM patrimonio;")
         rows = cur.fetchall()
         cur.close()
         conn.close()
@@ -41,27 +41,21 @@ class Patrimonio(Resource):
 
     
 class FiltrarPatrimonio(Resource):
-    def get(self, Tombo):
+    def get(self, tombo):
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT Tombo, Nome,  Matricula_Serv, Situacao, Data, Local FROM BD_Servidor WHERE Tombo = %s", (Tombo,))
+        cur.execute("SELECT * FROM patrimonio WHERE tombo = %s", (tombo,))
         rows = conn.cursor()
         cur.close()
 
         if rows:
-            pat_completo = [{'Tombo' : row[0], 'Nome' : row[1], 'Matricula_Serv' : row[2], 'Situacao' : row[3], 'Data': row[4].strftime('%Y-%m-%d %H:%M:%S'), 'Local': row[5]} for row in rows]
+            pat_completo = [{'Tombo' : row[0], 'Descrição' : row[1], 'Situação' : row[2], 'Local': row[3]} for row in rows]
             return pat_completo
         
         return jsonify({'message' : 'Nenhum patrimônio encontrado com o tombo fornecido'}), 404
 
 class InserirObjeto(Resource):
-    @staticmethod
-    def data_valida(valor):
-        try:
-            return datetime.strptime(valor, '%d-%m-%Y').date()
-        except ValueError:
-            raise ValueError("Data deve estar no formato DD-MM-YYYY.")
-    
+    @staticmethod    
     def codigo(tamanho=8):
         caracters = string.ascii_uppercase + string.digits
         return ''.join(secrets.choice(caracters) for _ in range(tamanho))
@@ -69,9 +63,9 @@ class InserirObjeto(Resource):
     def post(self):
         objeto = reqparse.RequestParser()
         objeto.add_argument('Tombo', type=int, required=True, help="O campo 'Tombo' é obrigatório.")
-        objeto.add_argument('Situação', type=str, required=True, help="O campo 'Situação' é obrigatório.")
-        objeto.add_argument('Data', type=InserirObjeto.data_valida, required=True, help="O campo 'Data' é obrigatório e deve estar no formato DD-MM-YYYY.")
-        objeto.add_argument('Local', type=str, help="O campo 'Local é obrigatório")
+        objeto.add_argument('Matrícula', type=int, required=True, help="O campo 'Matrícula' é obrigatório.")
+        objeto.add_argument('Descrição', type=str, required=True, help="O campo 'Descrição' é obrigatório.")
+        objeto.add_argument('Localização', type=str, help="O campo 'Localização' é obrigatório")
 
         dados = objeto.parse_args()
         codigo = self.codigo
