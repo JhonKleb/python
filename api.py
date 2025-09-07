@@ -45,11 +45,11 @@ class FiltrarPatrimonio(Resource):
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("SELECT * FROM patrimonio WHERE tombo = %s", (tombo,))
-        rows = conn.cursor()
-        cur.close()
+        rows = cur.fetchall()
+        conn.close()
 
         if rows:
-            pat_completo = [{'Tombo' : row[0], 'Descrição' : row[1], 'Situação' : row[2], 'Local': row[3]} for row in rows]
+            pat_completo = [{'Tombo' : row['tombo'], 'Descrição' : row['descricao'], 'Situação' : row['situacao'], 'Local': row['localizacao']} for row in rows]
             return pat_completo
         
         return jsonify({'message' : 'Nenhum patrimônio encontrado com o tombo fornecido'}), 404
@@ -68,12 +68,22 @@ class InserirObjeto(Resource):
         objeto.add_argument('Localização', type=str, help="O campo 'Localização' é obrigatório")
 
         dados = objeto.parse_args()
-        codigo = self.codigo
+        codigo = self.codigo()
 
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO patrimonio (tombo, matricula, descricao, localizacao, codigo) VALUES (%s, %s, %s, %s, %s)",
+            (dados['Tombo'], dados['Matrícula'], dados['Descrição'], dados['Localização'], codigo)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        
         return jsonify({'message': 'Objeto adicionado!', 'dados': dados, 'codigo': codigo})
 
 api.add_resource(Patrimonio, '/patrimonio')
-api.add_resource(FiltrarPatrimonio, '/filtpatrimonio/<int:Tombo>')
+api.add_resource(FiltrarPatrimonio, '/filtpatrimonio/<int:tombo>')
 api.add_resource(InserirObjeto, '/insobj')
 
 if __name__ == '__main__':
