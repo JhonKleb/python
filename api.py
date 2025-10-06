@@ -82,9 +82,15 @@ class InserirObjeto(Resource):
         
         return jsonify({'message': 'Objeto adicionado!', 'dados': dados, 'codigo': codigo})
 
+#class CriarConta(Resource):
+
+#class Login(Resource):
+
 api.add_resource(Patrimonio, '/patrimonio')
 api.add_resource(FiltrarPatrimonio, '/filtpatrimonio/<int:tombo>')
 api.add_resource(InserirObjeto, '/insobj')
+#api.add_resource(CriarConta, '/cadastro')
+#api.add_resource(Login, '/login')
 
 if __name__ == '__main__':
     app.run(port=5000, host='localhost', debug=True)    
