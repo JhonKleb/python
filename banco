@@ -1,8 +1,9 @@
-DROP TABLE IF EXISTS denuncia CASCADE;
-DROP TABLE IF EXISTS patrimonio CASCADE;
-DROP TABLE IF EXISTS login CASCADE;
-DROP TABLE IF EXISTS aluno CASCADE;
-DROP TABLE IF EXISTS servidor CASCADE;
+--DROP TABLE IF EXISTS denuncia CASCADE;
+--DROP TABLE IF EXISTS patrimonio CASCADE;
+--DROP TABLE IF EXISTS login_aluno CASCADE;
+--DROP TABLE IF EXISTS login_servidor CASCADE;
+--DROP TABLE IF EXISTS aluno CASCADE;
+--DROP TABLE IF EXISTS servidor CASCADE;
 
 CREATE TABLE aluno (
     matricula_al BIGINT PRIMARY KEY,
@@ -17,13 +18,24 @@ CREATE TABLE servidor (
     email VARCHAR(100) UNIQUE
 );
 
-CREATE TABLE login (
+CREATE TABLE login_aluno (
     id_login SERIAL PRIMARY KEY,
-    matricula_al BIGINT NULL,
-    matricula_serv BIGINT NULL,
+    matricula_al BIGINT NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    CONSTRAINT fk_login_al FOREIGN KEY (matricula_al) REFERENCES aluno(matricula_al) ON DELETE CASCADE,
-    CONSTRAINT fk_login_serv FOREIGN KEY (matricula_serv) REFERENCES servidor(matricula_serv) ON DELETE CASCADE
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_login_al FOREIGN KEY (matricula_al)
+        REFERENCES aluno(matricula_al)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE login_servidor (
+    id_login SERIAL PRIMARY KEY,
+    matricula_serv BIGINT NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_login_serv FOREIGN KEY (matricula_serv)
+        REFERENCES servidor(matricula_serv)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE patrimonio (
@@ -43,8 +55,12 @@ CREATE TABLE denuncia (
     status VARCHAR(50) DEFAULT 'Aberta',
     data_denuncia TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     localizacao VARCHAR(100),
-    CONSTRAINT fk_denuncia_patr FOREIGN KEY (tombo) REFERENCES patrimonio(tombo) ON DELETE CASCADE,
-    CONSTRAINT fk_denuncia_al FOREIGN KEY (matricula_al) REFERENCES aluno(matricula_al) ON DELETE CASCADE
+    CONSTRAINT fk_denuncia_patr FOREIGN KEY (tombo)
+        REFERENCES patrimonio(tombo)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_denuncia_al FOREIGN KEY (matricula_al)
+        REFERENCES aluno(matricula_al)
+        ON DELETE CASCADE
 );
 
 INSERT INTO servidor (matricula_serv, nome, email)
@@ -58,3 +74,9 @@ VALUES (2023120230020, 'Jhon Kleber Silva Costa', 'jhonklebersilvacosta0@gmail.c
 
 INSERT INTO denuncia (tombo, matricula_al, descricao, localizacao) 
 VALUES (4569, 2023120230020, 'Projetor não está ligando', 'Laboratório 01');
+
+INSERT INTO login_aluno (matricula_al, senha)
+VALUES (2023120230020, 'senha_hash_aluno');
+
+INSERT INTO login_servidor (matricula_serv, senha)
+VALUES (242543, 'senha_hash_servidor');
