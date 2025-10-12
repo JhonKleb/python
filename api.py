@@ -82,7 +82,10 @@ class InserirObjeto(Resource):
         
         return jsonify({'message': 'Objeto adicionado!', 'dados': dados, 'codigo': codigo})
 
-#class CriarConta(Resource):
+class CriarConta(Resource):
+    def post(self):
+        objeto = reqparse.RequestParser()
+        objeto.add_argument('')
 
 #class Login(Resource):
 
