@@ -4,13 +4,13 @@ from flask_cors import CORS
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
-import secrets, string, bcrypt
-
+import bcrypt
 
 app = Flask(__name__)
 api = Api(app)
 CORS(app)
-# Configuração do MySQL
+
+# Configuração do PostgreSQL
 DB_HOST = 'localhost'
 DB_NAME = 'sipat'
 DB_USER = 'postgres'
@@ -36,10 +36,8 @@ class Patrimonio(Resource):
         rows = cur.fetchall()
         cur.close()
         conn.close()
-
         return jsonify({'Patrimonio completo': rows})
 
-    
 class FiltrarPatrimonio(Resource):
     def get(self, tombo):
         conn = get_db_connection()
@@ -47,49 +45,53 @@ class FiltrarPatrimonio(Resource):
         cur.execute("SELECT * FROM patrimonio WHERE tombo = %s", (tombo,))
         rows = cur.fetchall()
         conn.close()
-
         if rows:
-            pat_completo = [{'Tombo' : row['tombo'], 'Descrição' : row['descricao'], 'Situação' : row['situacao'], 'Local': row['localizacao']} for row in rows]
+            pat_completo = [{
+                'Tombo': row['tombo'],
+                'Descrição': row['descricao'],
+                'Situação': row['situacao'],
+                'Local': row['local'] 
+            } for row in rows]
             return pat_completo
-        
-        return jsonify({'message' : 'Nenhum patrimônio encontrado com o tombo fornecido'}), 404
+        return jsonify({'message': 'Nenhum patrimônio encontrado com o tombo fornecido'}), 404
 
 class InserirObjeto(Resource):
-    @staticmethod    
-    def codigo(tamanho=8):
-        caracters = string.ascii_uppercase + string.digits
-        return ''.join(secrets.choice(caracters) for _ in range(tamanho))
-    
     def post(self):
         objeto = reqparse.RequestParser()
         objeto.add_argument('Tombo', type=int, required=True, help="O campo 'Tombo' é obrigatório.")
-        objeto.add_argument('Matrícula', type=int, required=True, help="O campo 'Matrícula' é obrigatório.")
+        objeto.add_argument('Matrícula', type=int, required=True, help="O campo 'Matrícula do aluno' é obrigatório.")
         objeto.add_argument('Descrição', type=str, required=True, help="O campo 'Descrição' é obrigatório.")
-        objeto.add_argument('Localização', type=str, help="O campo 'Localização' é obrigatório")
-
+        objeto.add_argument('Localização', type=str, required=True, help="O campo 'Localização' é obrigatório.")
         dados = objeto.parse_args()
-        codigo = self.codigo()
 
         conn = get_db_connection()
         cur = conn.cursor()
+
         cur.execute(
-            "INSERT INTO patrimonio (tombo, matricula, descricao, localizacao, codigo) VALUES (%s, %s, %s, %s, %s)",
-            (dados['Tombo'], dados['Matrícula'], dados['Descrição'], dados['Localização'], codigo)
+            """
+            INSERT INTO denuncia (tombo, matricula_al, descricao, localizacao)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (dados['Tombo'], dados['Matrícula'], dados['Descrição'], dados['Localização'])
         )
+
         conn.commit()
         cur.close()
         conn.close()
-        
-        return jsonify({'message': 'Objeto adicionado!', 'dados': dados, 'codigo': codigo})
+
+        return jsonify({
+            'message': 'Denúncia registrada com sucesso!',
+            'dados': dados
+        })
 
 class CriarConta(Resource):
-   def post(self):
+    def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('matricula', type=int, required=True)
         parser.add_argument('nome', type=str, required=True)
         parser.add_argument('email', type=str, required=True)
         parser.add_argument('senha', type=str, required=True)
-        parser.add_argument('turma', type=str, required=False) 
+        parser.add_argument('turma', type=str, required=False)
         dados = parser.parse_args()
 
         senha_hash = bcrypt.hashpw(dados['senha'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -127,7 +129,7 @@ class CriarConta(Resource):
         cur.close()
         conn.close()
         return jsonify({'message': 'Conta criada com sucesso!', 'matricula': dados['matricula']})
-    
+
 class Login(Resource):
     def post(self):
         parser = reqparse.RequestParser()
@@ -140,7 +142,6 @@ class Login(Resource):
 
         cur.execute("SELECT senha FROM login_aluno WHERE matricula_al = %s", (dados['matricula'],))
         user = cur.fetchone()
-
         if user is None:
             cur.execute("SELECT senha FROM login_servidor WHERE matricula_serv = %s", (dados['matricula'],))
             user = cur.fetchone()
@@ -160,4 +161,4 @@ api.add_resource(CriarConta, '/cadastro')
 api.add_resource(Login, '/login')
 
 if __name__ == '__main__':
-    app.run(port=5000, host='localhost', debug=True)    
+    app.run(port=5000, host='localhost', debug=True)
