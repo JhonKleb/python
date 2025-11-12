@@ -19,7 +19,6 @@ DB_PASS = 'root'
 DB_PORT = 5432
 
 def get_db_connection():
-    # ✅ Corrigido: já define RealDictCursor globalmente
     return psycopg2.connect(
         host=DB_HOST,
         database=DB_NAME,
@@ -153,7 +152,6 @@ class Login(Resource):
         cur.close()
         conn.close()
 
-        # ⚙️ Verificação segura da senha
         if user:
             try:
                 senha_hash = user['senha'].encode('utf-8')
