@@ -6,11 +6,12 @@ from psycopg2.extras import RealDictCursor
 from datetime import datetime
 import bcrypt
 
+
 app = Flask(__name__)
 api = Api(app)
 CORS(app)
 
-# Configuração do PostgreSQL
+
 DB_HOST = 'localhost'
 DB_NAME = 'sipat'
 DB_USER = 'postgres'
@@ -18,7 +19,8 @@ DB_PASS = 'root'
 DB_PORT = 5432
 
 def get_db_connection():
-    conn = psycopg2.connect(
+    # ✅ Corrigido: já define RealDictCursor globalmente
+    return psycopg2.connect(
         host=DB_HOST,
         database=DB_NAME,
         user=DB_USER,
@@ -26,7 +28,7 @@ def get_db_connection():
         port=DB_PORT,
         cursor_factory=RealDictCursor
     )
-    return conn
+
 
 class Patrimonio(Resource):
     def get(self):
@@ -45,44 +47,45 @@ class FiltrarPatrimonio(Resource):
         cur.execute("SELECT * FROM patrimonio WHERE tombo = %s", (tombo,))
         rows = cur.fetchall()
         conn.close()
+
         if rows:
             pat_completo = [{
                 'Tombo': row['tombo'],
                 'Descrição': row['descricao'],
                 'Situação': row['situacao'],
-                'Local': row['local'] 
+                'Local': row['local']
             } for row in rows]
             return pat_completo
         return jsonify({'message': 'Nenhum patrimônio encontrado com o tombo fornecido'}), 404
 
+
 class InserirObjeto(Resource):
     def post(self):
-        objeto = reqparse.RequestParser()
-        objeto.add_argument('Tombo', type=int, required=True, help="O campo 'Tombo' é obrigatório.")
-        objeto.add_argument('Matrícula', type=int, required=True, help="O campo 'Matrícula do aluno' é obrigatório.")
-        objeto.add_argument('Descrição', type=str, required=True, help="O campo 'Descrição' é obrigatório.")
-        objeto.add_argument('Localização', type=str, required=True, help="O campo 'Localização' é obrigatório.")
-        dados = objeto.parse_args()
+        denuncia = request.get_json()
 
+        tombo = denuncia.get('Tombo')
+        matricula = denuncia.get('Matrícula')
+        descricao = denuncia.get('Descrição')
+        localizacao = denuncia.get('Localização')
+        
+        if not tombo or not matricula or not descricao or not localizacao:
+            return jsonify({"message": "Todos os campos são obrigatórios!"}), 400
+        
         conn = get_db_connection()
         cur = conn.cursor()
 
-        cur.execute(
-            """
-            INSERT INTO denuncia (tombo, matricula_al, descricao, localizacao)
-            VALUES (%s, %s, %s, %s)
-            """,
-            (dados['Tombo'], dados['Matrícula'], dados['Descrição'], dados['Localização'])
-        )
+    
 
+        cur.execute("""
+                INSERT INTO denuncia (tombo, matricula_al, descricao, localizacao)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (tombo, matricula, descricao, localizacao))
         conn.commit()
         cur.close()
         conn.close()
 
-        return jsonify({
-            'message': 'Denúncia registrada com sucesso!',
-            'dados': dados
-        })
+        return jsonify({"mensagem": "Denúncia registrada com sucesso!"})
 
 class CriarConta(Resource):
     def post(self):
@@ -140,6 +143,7 @@ class Login(Resource):
         conn = get_db_connection()
         cur = conn.cursor()
 
+        # 🔍 Busca primeiro em aluno, depois em servidor
         cur.execute("SELECT senha FROM login_aluno WHERE matricula_al = %s", (dados['matricula'],))
         user = cur.fetchone()
         if user is None:
@@ -149,11 +153,21 @@ class Login(Resource):
         cur.close()
         conn.close()
 
-        if user and bcrypt.checkpw(dados['senha'].encode('utf-8'), user['senha'].encode('utf-8')):
-            return jsonify({'message': 'Login bem-sucedido!', 'matricula': dados['matricula']})
-        else:
-            return jsonify({'message': 'Matrícula ou senha incorretos'}), 401
+        # ⚙️ Verificação segura da senha
+        if user:
+            try:
+                senha_hash = user['senha'].encode('utf-8')
+                if bcrypt.checkpw(dados['senha'].encode('utf-8'), senha_hash):
+                    return {'message': 'Login bem-sucedido!', 'matricula': dados['matricula']}, 200
+                else:
+                    return {'message': 'Matrícula ou senha incorretos'}, 401
+            except ValueError:
+                return {'message': 'Erro: formato de senha inválido no banco. Recrie sua conta.'}, 500
 
+        return {'message': 'Matrícula ou senha incorretos'}, 401
+
+
+       
 api.add_resource(Patrimonio, '/patrimonio')
 api.add_resource(FiltrarPatrimonio, '/filtpatrimonio/<int:tombo>')
 api.add_resource(InserirObjeto, '/insobj')
