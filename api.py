@@ -90,8 +90,6 @@ class InserirObjeto(Resource):
         conn = get_db_connection()
         cur = conn.cursor()
 
-    
-
         cur.execute("""
                 INSERT INTO denuncia (tombo, matricula_al, descricao, localizacao)
                 VALUES (%s, %s, %s, %s)
