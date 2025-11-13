@@ -37,7 +37,7 @@ class Patrimonio(Resource):
         rows = cur.fetchall()
         cur.close()
         conn.close()
-        return jsonify({'Patrimonio completo': rows})
+        return ({'Patrimonio completo': rows}), 200
 
 class FiltrarPatrimonio(Resource):
     def get(self, tombo):
@@ -55,7 +55,7 @@ class FiltrarPatrimonio(Resource):
                 'Local': row['local']
             } for row in rows]
             return pat_completo
-        return jsonify({'message': 'Nenhum patrimônio encontrado com o tombo fornecido'}), 404
+        return ({'message': 'Nenhum patrimônio encontrado com o tombo fornecido'}), 404
 
 
 class InserirObjeto(Resource):
@@ -68,7 +68,7 @@ class InserirObjeto(Resource):
         localizacao = denuncia.get('Localização')
         
         if not tombo or not matricula or not descricao or not localizacao:
-            return jsonify({"message": "Todos os campos são obrigatórios!"}), 400
+            return ({"message": "Todos os campos são obrigatórios!"}), 400
         
         conn = get_db_connection()
         cur = conn.cursor()
@@ -84,7 +84,7 @@ class InserirObjeto(Resource):
         cur.close()
         conn.close()
 
-        return jsonify({"mensagem": "Denúncia registrada com sucesso!"})
+        return ({"mensagem": "Denúncia registrada com sucesso!"}), 201
 
 class CriarConta(Resource):
     def post(self):
@@ -101,36 +101,39 @@ class CriarConta(Resource):
         conn = get_db_connection()
         cur = conn.cursor()
 
+        # Verifica se já existe a matrícula em aluno ou servidor
         cur.execute("SELECT * FROM aluno WHERE matricula_al = %s", (dados['matricula'],))
-        if cur.fetchone():
+        aluno_existente = cur.fetchone()
+        cur.execute("SELECT * FROM servidor WHERE matricula_serv = %s", (dados['matricula'],))
+        servidor_existente = cur.fetchone()
+
+        if aluno_existente or servidor_existente:
+            return ({'message': 'Essa matrícula já está cadastrada!'}), 400
+
+        # Se tiver campo 'turma', considera como aluno; senão, como servidor
+        if dados.get('turma'):
             cur.execute(
-                "UPDATE aluno SET nome = %s, email = %s, turma = %s WHERE matricula_al = %s",
-                (dados['nome'], dados['email'], dados.get('turma'), dados['matricula'])
+                "INSERT INTO aluno (matricula_al, nome, email, turma) VALUES (%s, %s, %s, %s)",
+                (dados['matricula'], dados['nome'], dados['email'], dados['turma'])
             )
             cur.execute(
                 "INSERT INTO login_aluno (matricula_al, senha) VALUES (%s, %s)",
                 (dados['matricula'], senha_hash)
             )
         else:
-            cur.execute("SELECT * FROM servidor WHERE matricula_serv = %s", (dados['matricula'],))
-            if cur.fetchone():
-                cur.execute(
-                    "UPDATE servidor SET nome = %s, email = %s WHERE matricula_serv = %s",
-                    (dados['nome'], dados['email'], dados['matricula'])
-                )
-                cur.execute(
-                    "INSERT INTO login_servidor (matricula_serv, senha) VALUES (%s, %s)",
-                    (dados['matricula'], senha_hash)
-                )
-            else:
-                cur.close()
-                conn.close()
-                return jsonify({'message': 'Matrícula não encontrada em aluno ou servidor'}), 404
+            cur.execute(
+                "INSERT INTO servidor (matricula_serv, nome, email) VALUES (%s, %s, %s)",
+                (dados['matricula'], dados['nome'], dados['email'])
+            )
+            cur.execute(
+                "INSERT INTO login_servidor (matricula_serv, senha) VALUES (%s, %s)",
+                (dados['matricula'], senha_hash)
+            )
 
         conn.commit()
         cur.close()
         conn.close()
-        return jsonify({'message': 'Conta criada com sucesso!', 'matricula': dados['matricula']})
+        return ({'message': 'Conta criada com sucesso!', 'matricula': dados['matricula']}), 201
 
 class Login(Resource):
     def post(self):
