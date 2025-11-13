@@ -3,7 +3,7 @@ from flask_restful import Resource, Api, reqparse
 from flask_cors import CORS
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from datetime import datetime
+from datetime import date, datetime
 import bcrypt
 
 
@@ -37,7 +37,17 @@ class Patrimonio(Resource):
         rows = cur.fetchall()
         cur.close()
         conn.close()
-        return ({'Patrimonio completo': rows}), 200
+
+        # Converter datas para string
+        for row in rows:
+            for key, value in row.items():
+                if isinstance(value, (date, datetime)):
+                    row[key] = value.isoformat()
+
+        if not rows:
+            return {'message': 'Nenhum patrimônio encontrado'}, 404
+        
+        return {'patrimonio_completo': rows}, 200
 
 class FiltrarPatrimonio(Resource):
     def get(self, tombo):
@@ -45,7 +55,14 @@ class FiltrarPatrimonio(Resource):
         cur = conn.cursor()
         cur.execute("SELECT * FROM patrimonio WHERE tombo = %s", (tombo,))
         rows = cur.fetchall()
+        cur.close()
         conn.close()
+
+        # Converter datas para string
+        for row in rows:
+            for key, value in row.items():
+                if isinstance(value, (date, datetime)):
+                    row[key] = value.isoformat()
 
         if rows:
             pat_completo = [{
@@ -54,9 +71,9 @@ class FiltrarPatrimonio(Resource):
                 'Situação': row['situacao'],
                 'Local': row['local']
             } for row in rows]
-            return pat_completo
-        return ({'message': 'Nenhum patrimônio encontrado com o tombo fornecido'}), 404
-
+            return {'resultado': pat_completo}, 200
+        
+        return {'message': 'Nenhum patrimônio encontrado com o tombo fornecido'}, 404
 
 class InserirObjeto(Resource):
     def post(self):
@@ -167,8 +184,7 @@ class Login(Resource):
 
         return {'message': 'Matrícula ou senha incorretos'}, 401
 
-
-       
+     
 api.add_resource(Patrimonio, '/patrimonio')
 api.add_resource(FiltrarPatrimonio, '/filtpatrimonio/<int:tombo>')
 api.add_resource(InserirObjeto, '/insobj')
