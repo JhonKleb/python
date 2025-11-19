@@ -201,7 +201,32 @@ class VerDenuncias(Resource):
             return {'message': 'Nenhuma denúncia encontrada'}, 404
         
         return {'Todas as denúncias': rows}, 200
-    
+
+class AdicionarSetor(Resource):
+    def post(self):
+        add_setor = request.get_json()
+
+        setor = add_setor.get('Setor')
+        
+        if not setor:
+            return ({"message": "É obrigatório adicionar o setor!"}), 400
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+                INSERT INTO setores (nome_setor)
+                VALUES (%s)
+                """,
+                (setor,) 
+        )
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return ({"mensagem": "Setor adicionado com sucesso"}), 201
+
     
 api.add_resource(Patrimonio, '/patrimonio')
 api.add_resource(FiltrarPatrimonio, '/filtpatrimonio/<int:tombo>')
@@ -210,6 +235,7 @@ api.add_resource(CriarConta, '/cadastro')
 api.add_resource(Login, '/login')
 #Rotas atualizadas
 api.add_resource(VerDenuncias, '/denuncias')
+api.add_resource(AdicionarSetor, '/addsetor')
 
 if __name__ == '__main__':
     app.run(port=5000, host='localhost', debug=True)
