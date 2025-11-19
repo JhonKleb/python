@@ -4,6 +4,7 @@
 --DROP TABLE IF EXISTS login_servidor CASCADE;
 --DROP TABLE IF EXISTS aluno CASCADE;
 --DROP TABLE IF EXISTS servidor CASCADE;
+--DROP TABLE IF EXISTS setores CASCADE;
 
 CREATE TABLE aluno (
     matricula_al BIGINT PRIMARY KEY,
@@ -47,6 +48,10 @@ CREATE TABLE patrimonio (
     codigo VARCHAR(20) UNIQUE NOT NULL
 );
 
+CREATE TABLE setores (
+    nome_setor VARCHAR(100) PRIMARY KEY
+);
+
 CREATE TABLE denuncia (
     id_denuncia SERIAL PRIMARY KEY,
     tombo BIGINT,
@@ -63,10 +68,7 @@ CREATE TABLE denuncia (
         ON DELETE SET NULL
 );
 
-CREATE TABLE setores (
-    nome_setor VARCHAR(100) PRIMARY KEY
-);
-
+-- INSERTS
 INSERT INTO servidor (matricula_serv, nome, email)
 VALUES (242543, 'ServidorEx', 'servex@gmail.com');
 
@@ -76,14 +78,18 @@ VALUES (4569, 'Projetor Epson', 'Em funcionamento', 'Laboratório 01', 'ABC12345
 INSERT INTO aluno (matricula_al, nome, email, turma) 
 VALUES (2023120230020, 'Jhon Kleber Silva Costa', 'jhonklebersilvacosta0@gmail.com', 'INFO3A');
 
+INSERT INTO setores (nome_setor)
+VALUES 
+('Laboratório EAD'),
+('Sala 01'),
+('Laboratório 01'),
+('Sala 04');
+
 INSERT INTO denuncia (tombo, matricula_al, descricao, setor) 
-VALUES (443215, 2023120230020, 'Equipamento sem algumas teclas', 'Laboratório 01');
+VALUES (4569, 2023120230020, 'Equipamento sem algumas teclas', 'Laboratório 01');
 
 INSERT INTO login_aluno (matricula_al, senha)
 VALUES (2023120230020, 'senha_hash_aluno');
 
 INSERT INTO login_servidor (matricula_serv, senha)
 VALUES (242543, 'senha_hash_servidor');
-
-INSERT INTO setores (nome_setor)
-VALUES ('Laboratório EAD');
