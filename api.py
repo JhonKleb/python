@@ -182,12 +182,34 @@ class Login(Resource):
 
         return {'message': 'Matrícula ou senha incorretos'}, 401
 
-     
+#Classes atualizadas
+class VerDenuncias(Resource):
+    def get(self):
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM denuncia;")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        for row in rows:
+            for key, value in row.items():
+                if isinstance(value, (date, datetime)):
+                    row[key] = value.isoformat()
+
+        if not rows:
+            return {'message': 'Nenhuma denúncia encontrada'}, 404
+        
+        return {'Todas as denúncias': rows}, 200
+    
+    
 api.add_resource(Patrimonio, '/patrimonio')
 api.add_resource(FiltrarPatrimonio, '/filtpatrimonio/<int:tombo>')
 api.add_resource(InserirObjeto, '/insobj')
 api.add_resource(CriarConta, '/cadastro')
 api.add_resource(Login, '/login')
+#Rotas atualizadas
+api.add_resource(VerDenuncias, '/denuncias')
 
 if __name__ == '__main__':
     app.run(port=5000, host='localhost', debug=True)
