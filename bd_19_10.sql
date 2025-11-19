@@ -63,7 +63,6 @@ CREATE TABLE denuncia (
         ON DELETE SET NULL
 );
 
-
 CREATE TABLE setores (
     nome_setor VARCHAR(100) PRIMARY KEY
 );
