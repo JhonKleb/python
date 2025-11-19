@@ -49,15 +49,23 @@ CREATE TABLE patrimonio (
 
 CREATE TABLE denuncia (
     id_denuncia SERIAL PRIMARY KEY,
-    tombo BIGINT, -- 🔹 Agora opcional
+    tombo BIGINT,
     matricula_al BIGINT NOT NULL,
     descricao TEXT NOT NULL,
     status VARCHAR(50) DEFAULT 'Aberta',
     data_denuncia TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    localizacao VARCHAR(100),
+    setor VARCHAR(100),
     CONSTRAINT fk_denuncia_al FOREIGN KEY (matricula_al)
         REFERENCES aluno(matricula_al)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fk_denuncia_setor FOREIGN KEY (setor)
+        REFERENCES setores(nome_setor)
+        ON DELETE SET NULL
+);
+
+
+CREATE TABLE setores (
+    nome_setor VARCHAR(100) PRIMARY KEY
 );
 
 INSERT INTO servidor (matricula_serv, nome, email)
@@ -69,7 +77,7 @@ VALUES (4569, 'Projetor Epson', 'Em funcionamento', 'Laboratório 01', 'ABC12345
 INSERT INTO aluno (matricula_al, nome, email, turma) 
 VALUES (2023120230020, 'Jhon Kleber Silva Costa', 'jhonklebersilvacosta0@gmail.com', 'INFO3A');
 
-INSERT INTO denuncia (tombo, matricula_al, descricao, localizacao) 
+INSERT INTO denuncia (tombo, matricula_al, descricao, setor) 
 VALUES (443215, 2023120230020, 'Equipamento sem algumas teclas', 'Laboratório 01');
 
 INSERT INTO login_aluno (matricula_al, senha)
@@ -77,3 +85,6 @@ VALUES (2023120230020, 'senha_hash_aluno');
 
 INSERT INTO login_servidor (matricula_serv, senha)
 VALUES (242543, 'senha_hash_servidor');
+
+INSERT INTO setores (nome_setor)
+VALUES ('Laboratório EAD');
