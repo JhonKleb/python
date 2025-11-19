@@ -82,24 +82,26 @@ class InserirObjeto(Resource):
         tombo = denuncia.get('Tombo')
         matricula = denuncia.get('Matrícula')
         descricao = denuncia.get('Descrição')
-        localizacao = denuncia.get('Localização')
-        
-        if not tombo or not matricula or not descricao or not localizacao:
-            return ({"message": "Todos os campos são obrigatórios!"}), 400
+        setor = denuncia.get('Setor')
+
+        if not tombo or not matricula or not descricao or not setor:
+            return {"message": "Todos os campos são obrigatórios!"}, 400
         
         conn = get_db_connection()
         cur = conn.cursor()
 
         cur.execute("""
-                INSERT INTO denuncia (tombo, matricula_al, descricao, localizacao)
+                INSERT INTO denuncia (tombo, matricula_al, descricao, setor)
                 VALUES (%s, %s, %s, %s)
                 """,
-                (tombo, matricula, descricao, localizacao))
+                (tombo, matricula, descricao, setor)
+        )
+
         conn.commit()
         cur.close()
         conn.close()
 
-        return ({"mensagem": "Denúncia registrada com sucesso!"}), 201
+        return {"mensagem": "Denúncia registrada com sucesso!"}, 201
 
 class CriarConta(Resource):
     def post(self):
