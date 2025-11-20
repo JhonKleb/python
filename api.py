@@ -294,29 +294,40 @@ class VerSetores(Resource):
 
 class VerDenunciasUsuario(Resource):
     def get(self, matricula):
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
+        try:
+           
+            conn = get_db_connection()
+            cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        cur.execute("""
-            SELECT tombo, matricula_al, descricao, setor, data_hora
-            FROM denuncia
-            WHERE matricula_al = %s
-            ORDER BY data_hora DESC;
-        """, (matricula,))
+            # Buscar denúncias do usuário
+            cur.execute("""
+                SELECT 
+                    id_denuncia,
+                    tombo,
+                    descricao,
+                    setor,
+                    status,
+                    TO_CHAR(data_denuncia, 'DD/MM/YYYY HH24:MI') AS data_denuncia
+                FROM denuncia
+                WHERE matricula_al = %s
+                ORDER BY data_denuncia DESC
+            """, (matricula,))
 
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
+            denuncias = cur.fetchall()
 
-        if not rows:
-            return {"message": "Nenhum relato enviado ainda."}, 200
+            cur.close()
+            conn.close()
 
-        # Converter datas
-        for row in rows:
-            if isinstance(row.get("data_hora"), (date, datetime)):
-                row["data_hora"] = row["data_hora"].isoformat()
+            return jsonify({
+                "status": "sucesso",
+                "denuncias": denuncias
+            })
 
-        return {"denuncias": rows}, 200
+        except Exception as e:
+            return jsonify({
+                "status": "erro",
+                "mensagem": str(e)
+            })
     
 
 api.add_resource(Patrimonio, '/patrimonio')
@@ -329,7 +340,7 @@ api.add_resource(VerDenuncias, '/denuncias')
 api.add_resource(AdicionarSetor, '/addsetor')
 api.add_resource(DadosUsuario, '/dadosusuario/<int:matricula>')
 api.add_resource(VerSetores, '/setores')
-api.add_resource(VerDenunciasUsuario, '/denunciasusuario/<int:matricula>')
+api.add_resource(VerDenunciasUsuario, "/denuncias_usuario/<int:matricula>")
 
 if __name__ == '__main__':
     app.run(port=5000, host='localhost', debug=True)
