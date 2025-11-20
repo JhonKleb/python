@@ -197,7 +197,7 @@ class Login(Resource):
 class VerDenuncias(Resource):
     def get(self):
         conn = get_db_connection()
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute("SELECT * FROM denuncia;")
         rows = cur.fetchall()
         cur.close()
