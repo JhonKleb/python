@@ -271,7 +271,53 @@ class DadosUsuario(Resource):
             return servidor, 200
 
         return {"message": "Usuário não encontrado"}, 404
+    
+class VerSetores(Resource):
+    def get(self):
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT * FROM setores;")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
 
+        # Converter datas se existirem (não é comum aqui, mas mantém padrão)
+        for row in rows:
+            for key, value in row.items():
+                if isinstance(value, (date, datetime)):
+                    row[key] = value.isoformat()
+
+        if not rows:
+            return {'message': 'Nenhum setor encontrado'}, 404
+
+        return {'Setores': rows}, 200
+
+class VerDenunciasUsuario(Resource):
+    def get(self, matricula):
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("""
+            SELECT tombo, matricula_al, descricao, setor, data_hora
+            FROM denuncia
+            WHERE matricula_al = %s
+            ORDER BY data_hora DESC;
+        """, (matricula,))
+
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        if not rows:
+            return {"message": "Nenhum relato enviado ainda."}, 200
+
+        # Converter datas
+        for row in rows:
+            if isinstance(row.get("data_hora"), (date, datetime)):
+                row["data_hora"] = row["data_hora"].isoformat()
+
+        return {"denuncias": rows}, 200
+    
 
 api.add_resource(Patrimonio, '/patrimonio')
 api.add_resource(FiltrarPatrimonio, '/filtpatrimonio/<int:tombo>')
@@ -282,6 +328,8 @@ api.add_resource(Login, '/login')
 api.add_resource(VerDenuncias, '/denuncias')
 api.add_resource(AdicionarSetor, '/addsetor')
 api.add_resource(DadosUsuario, '/dadosusuario/<int:matricula>')
+api.add_resource(VerSetores, '/setores')
+api.add_resource(VerDenunciasUsuario, '/denunciasusuario/<int:matricula>')
 
 if __name__ == '__main__':
     app.run(port=5000, host='localhost', debug=True)
