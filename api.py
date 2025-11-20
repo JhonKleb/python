@@ -160,27 +160,36 @@ class Login(Resource):
         dados = parser.parse_args()
 
         conn = get_db_connection()
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        # 🔍 Busca primeiro em aluno, depois em servidor
         cur.execute("SELECT senha FROM login_aluno WHERE matricula_al = %s", (dados['matricula'],))
         user = cur.fetchone()
+        tipo = "aluno"
+
         if user is None:
             cur.execute("SELECT senha FROM login_servidor WHERE matricula_serv = %s", (dados['matricula'],))
             user = cur.fetchone()
+            tipo = "servidor" if user else None
 
         cur.close()
         conn.close()
 
-        if user:
-            try:
-                senha_hash = user['senha'].encode('utf-8')
-                if bcrypt.checkpw(dados['senha'].encode('utf-8'), senha_hash):
-                    return {'message': 'Login bem-sucedido!', 'matricula': dados['matricula']}, 200
-                else:
-                    return {'message': 'Matrícula ou senha incorretos'}, 401
-            except ValueError:
-                return {'message': 'Erro: formato de senha inválido no banco. Recrie sua conta.'}, 500
+        if not user:
+            return {'message': 'Matrícula ou senha incorretos'}, 401
+
+        senha_salva = user['senha']
+
+        if not isinstance(senha_salva, str) or not senha_salva.startswith("$2"):
+            return {'message': 'Erro: senha inválida no banco. Recrie sua conta.'}, 500
+
+        senha_hash = senha_salva.encode('utf-8')
+
+        if bcrypt.checkpw(dados['senha'].encode('utf-8'), senha_hash):
+            return {
+                'message': 'Login bem-sucedido!',
+                'matricula': dados['matricula'],
+                'tipo': tipo
+            }, 200
 
         return {'message': 'Matrícula ou senha incorretos'}, 401
 
@@ -229,7 +238,41 @@ class AdicionarSetor(Resource):
 
         return ({"mensagem": "Setor adicionado com sucesso"}), 201
 
-    
+class DadosUsuario(Resource):
+    def get(self, matricula):
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Verifica se é aluno
+        cur.execute("""
+            SELECT nome, email, matricula_al AS matricula, 'aluno' AS tipo
+            FROM aluno 
+            WHERE matricula_al = %s
+        """, (matricula,))
+        aluno = cur.fetchone()
+
+        if aluno:
+            cur.close()
+            conn.close()
+            return aluno, 200
+
+        # Verifica se é servidor
+        cur.execute("""
+            SELECT nome, email, matricula_serv AS matricula, 'servidor' AS tipo
+            FROM servidor 
+            WHERE matricula_serv = %s
+        """, (matricula,))
+        servidor = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if servidor:
+            return servidor, 200
+
+        return {"message": "Usuário não encontrado"}, 404
+
+
 api.add_resource(Patrimonio, '/patrimonio')
 api.add_resource(FiltrarPatrimonio, '/filtpatrimonio/<int:tombo>')
 api.add_resource(InserirObjeto, '/insobj')
@@ -238,6 +281,7 @@ api.add_resource(Login, '/login')
 #Rotas atualizadas
 api.add_resource(VerDenuncias, '/denuncias')
 api.add_resource(AdicionarSetor, '/addsetor')
+api.add_resource(DadosUsuario, '/dadosusuario/<int:matricula>')
 
 if __name__ == '__main__':
     app.run(port=5000, host='localhost', debug=True)
