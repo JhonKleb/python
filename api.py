@@ -38,7 +38,6 @@ class Patrimonio(Resource):
         cur.close()
         conn.close()
 
-        # Converter datas para string
         for row in rows:
             for key, value in row.items():
                 if isinstance(value, (date, datetime)):
@@ -58,7 +57,6 @@ class FiltrarPatrimonio(Resource):
         cur.close()
         conn.close()
 
-        # Converter datas para string
         for row in rows:
             for key, value in row.items():
                 if isinstance(value, (date, datetime)):
@@ -118,7 +116,6 @@ class CriarConta(Resource):
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # Verifica se já existe a matrícula em aluno ou servidor
         cur.execute("SELECT * FROM aluno WHERE matricula_al = %s", (dados['matricula'],))
         aluno_existente = cur.fetchone()
         cur.execute("SELECT * FROM servidor WHERE matricula_serv = %s", (dados['matricula'],))
@@ -127,7 +124,6 @@ class CriarConta(Resource):
         if aluno_existente or servidor_existente:
             return ({'message': 'Essa matrícula já está cadastrada!'}), 400
 
-        # Se tiver campo 'turma', considera como aluno; senão, como servidor
         if dados.get('turma'):
             cur.execute(
                 "INSERT INTO aluno (matricula_al, nome, email, turma) VALUES (%s, %s, %s, %s)",
@@ -243,7 +239,6 @@ class DadosUsuario(Resource):
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        # Verifica se é aluno
         cur.execute("""
             SELECT nome, email, matricula_al AS matricula, 'aluno' AS tipo
             FROM aluno 
@@ -256,7 +251,6 @@ class DadosUsuario(Resource):
             conn.close()
             return aluno, 200
 
-        # Verifica se é servidor
         cur.execute("""
             SELECT nome, email, matricula_serv AS matricula, 'servidor' AS tipo
             FROM servidor 
@@ -281,7 +275,6 @@ class VerSetores(Resource):
         cur.close()
         conn.close()
 
-        # Converter datas se existirem (não é comum aqui, mas mantém padrão)
         for row in rows:
             for key, value in row.items():
                 if isinstance(value, (date, datetime)):
@@ -349,24 +342,20 @@ class AdicionarEquipamento(Resource):
             conn = get_db_connection()
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
-            # 1️⃣ verificar se setor existe
             cur.execute("SELECT nome_setor FROM setores WHERE nome_setor = %s", (local,))
             setor_existe = cur.fetchone()
 
             if not setor_existe:
                 return {"mensagem": "Setor informado não existe"}, 400
 
-            # 2️⃣ verificar se tombo já existe
             cur.execute("SELECT tombo FROM patrimonio WHERE tombo = %s", (tombo,))
             if cur.fetchone():
                 return {"mensagem": "Já existe um equipamento com esse tombo"}, 400
 
-            # 3️⃣ verificar se código já existe
             cur.execute("SELECT codigo FROM patrimonio WHERE codigo = %s", (codigo,))
             if cur.fetchone():
                 return {"mensagem": "Já existe um equipamento com esse código"}, 400
 
-            # 4️⃣ inserir novo equipamento COM SITUAÇÃO
             cur.execute("""
                 INSERT INTO patrimonio (tombo, descricao, situacao, local, codigo)
                 VALUES (%s, %s, %s, %s, %s)
