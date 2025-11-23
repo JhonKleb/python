@@ -328,7 +328,60 @@ class VerDenunciasUsuario(Resource):
                 "status": "erro",
                 "mensagem": str(e)
             })
-    
+
+class AdicionarEquipamento(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("tombo", type=int, required=True, help="Tombo é obrigatório")
+        parser.add_argument("descricao", type=str, required=True, help="Descrição é obrigatória")
+        parser.add_argument("local", type=str, required=True, help="Local é obrigatório")
+        parser.add_argument("codigo", type=str, required=True, help="Código é obrigatório")
+        parser.add_argument("situacao", type=str, required=True, help="Situação é obrigatória")
+        args = parser.parse_args()
+
+        tombo = args["tombo"]
+        descricao = args["descricao"]
+        local = args["local"]
+        codigo = args["codigo"]
+        situacao = args["situacao"]
+
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+
+            # 1️⃣ verificar se setor existe
+            cur.execute("SELECT nome_setor FROM setores WHERE nome_setor = %s", (local,))
+            setor_existe = cur.fetchone()
+
+            if not setor_existe:
+                return {"mensagem": "Setor informado não existe"}, 400
+
+            # 2️⃣ verificar se tombo já existe
+            cur.execute("SELECT tombo FROM patrimonio WHERE tombo = %s", (tombo,))
+            if cur.fetchone():
+                return {"mensagem": "Já existe um equipamento com esse tombo"}, 400
+
+            # 3️⃣ verificar se código já existe
+            cur.execute("SELECT codigo FROM patrimonio WHERE codigo = %s", (codigo,))
+            if cur.fetchone():
+                return {"mensagem": "Já existe um equipamento com esse código"}, 400
+
+            # 4️⃣ inserir novo equipamento COM SITUAÇÃO
+            cur.execute("""
+                INSERT INTO patrimonio (tombo, descricao, situacao, local, codigo)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (tombo, descricao, situacao, local, codigo))
+
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            return {"mensagem": "Equipamento adicionado com sucesso"}, 201
+
+        except Exception as e:
+            print("Erro ao adicionar equipamento:", e)
+            return {"mensagem": "Erro no servidor"}, 500
+
 
 api.add_resource(Patrimonio, '/patrimonio')
 api.add_resource(FiltrarPatrimonio, '/filtpatrimonio/<int:tombo>')
@@ -341,6 +394,7 @@ api.add_resource(AdicionarSetor, '/addsetor')
 api.add_resource(DadosUsuario, '/dadosusuario/<int:matricula>')
 api.add_resource(VerSetores, '/setores')
 api.add_resource(VerDenunciasUsuario, "/denuncias_usuario/<int:matricula>")
+api.add_resource(AdicionarEquipamento, "/addequipamento")
 
 if __name__ == '__main__':
     app.run(port=5000, host='localhost', debug=True)
